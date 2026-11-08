@@ -488,6 +488,25 @@
 
     // Start on page load
     initGame();
+    async function showAdMobBanner() {
+        try {
+            if (window.Capacitor && window.Capacitor.isPluginAvailable('AdMob')) {
+                const { AdMob, BannerAdSize, BannerAdPosition } = window.Capacitor.Plugins;
+                await AdMob.initialize();
+                await AdMob.showBanner({
+                    adId: 'ca-app-pub-3129876015229913/7261798836',
+                    adSize: BannerAdSize.BANNER,
+                    position: BannerAdPosition.BOTTOM_CENTER,
+                    margin: 0,
+                    isTesting: false
+                });
+                console.log('AdMob banner active');
+            }
+        } catch (e) {
+            console.error('AdMob error:', e);
+        }
+    }
+    showAdMobBanner();
   </script>
 </body>
 </html>
