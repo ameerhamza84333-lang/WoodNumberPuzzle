@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Classic Wood Number Puzzle</title>
+  <style>
+    :root {
+      --wood-dark: #3e2213;
+      --wood-frame: #5c341e;
+      --wood-board: #2b180d;
+      --wood-tile: linear-gradient(145deg, #e7c293, #c59b65);
+      --wood-tile-border: #8b5a2b;
+      --tile-shadow: rgba(0, 0, 0, 0.4);
+      --accent-gold: #f39c12;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle, #4a2711 0%, #1a0e07 100%);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 10px;
+    }
+
+    /* Header & Stats */
+    .header {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #f7d794;
+      text-shadow: 1px 2px 4px #000;
+      letter-spacing: 1px;
+    }
+
+    .stats-bar {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      justify-content: space-between;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 8px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fcecd7;
+    }
+
+    /* Difficulty Selector Dropdown */
+    .controls-top {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    select, button {
+      background: #5c341e;
+      color: #fcecd7;
+      border: 1px solid #8b5a2b;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+      outline: none;
+    }
+
+    button:active {
+      transform: scale(0.97);
+    }
+
+    /* Wooden Board Frame */
+    .board-container {
+      width: 100%;
+      max-width: 400px;
+      aspect-ratio: 1 / 1;
+      background: var(--wood-frame);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: inset 0 0 15px #000, 0 10px 25px rgba(0, 0, 0, 0.7);
+      border: 4px solid #804a26;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .board {
+      width: 100%;
+      height: 100%;
+      background: var(--wood-board);
+      border-radius: 12px;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.9);
+      display: grid;
+      gap: 6px;
+      padding: 6px;
+      position: relative;
+    }
+
+    /* Wood Tiles */
+    .tile {
+      background: var(--wood-tile);
+      color: #3b200b;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: inset 1px 1px 3px rgba(255, 255, 255, 0.6),
+                  inset -2px -2px 4px rgba(0, 0, 0, 0.4),
+                  0 4px 6px var(--tile-shadow);
+      border: 1px solid var(--wood-tile-border);
+      transition: transform 0.1s ease-in-out;
+      position: relative;
+    }
+
+    .tile:active {
+      transform: scale(0.96);
+    }
+
+    .tile.empty {
+      background: transparent;
+      box-shadow: none;
+      border: none;
+      cursor: default;
+    }
+
+    /* Footer Buttons (Hint, Undo, Restart) */
+    .bottom-actions {
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      justify-content: space-around;
+      margin: 12px 0;
+    }
+
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(145deg, #7b4424, #502a14);
+      border: 1px solid #a36136;
+      padding: 10px 18px;
+      font-size: 0.9rem;
+      border-radius: 20px;
+    }
+
+    /* Ad Container (Banner Placeholder) */
+    .ad-banner-area {
+      width: 100%;
+      max-width: 360px;
+      height: 55px;
+      background: #111;
+      border: 1px dashed #666;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 0.75rem;
+      color: #aaa;
+      border-radius: 6px;
+      margin-top: auto;
+    }
+
+    /* Win Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .modal-box {
+      background: #4a2711;
+      border: 3px solid #f39c12;
+      padding: 24px;
+      border-radius: 16px;
+      text-align: center;
+      box-shadow: 0 0 20px #000;
+      width: 85%;
+      max-width: 320px;
+    }
+
+    .modal-box h2 {
+      color: #f1c40f;
+      margin-bottom: 12px;
+      font-size: 1.6rem;
+    }
+
+    .modal-box p {
+      color: #fcecd7;
+      margin: 6px 0;
+      font-size: 1rem;
+    }
+
+    .modal-box button {
+      margin-top: 15px;
+      padding: 10px 24px;
+      background: #27ae60;
+      border: none;
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar -->
+  <div class="header">
+    <div class="title">NUMBER PUZZLE</div>
+    <button onclick="restartGame()">↻ Reset</button>
+  </div>
+
+  <div class="controls-top">
+    <select id="gridSizeSelect" onchange="changeDifficulty(this.value)">
+      <option value="3">3 x 3 (Easy)</option>
+      <option value="4" selected>4 x 4 (Classic 15)</option>
+      <option value="5">5 x 5 (Hard)</option>
+      <option value="6">6 x 6 (Expert)</option>
+      <option value="7">7 x 7 (Master)</option>
+      <option value="8">8 x 8 (Grandmaster)</option>
+    </select>
+  </div>
+
+  <!-- Game Stats -->
+  <div class="stats-bar">
+    <div>⏱ Time: <span id="timerText">00:00</span></div>
+    <div>👣 Moves: <span id="movesText">0</span></div>
+  </div>
+
+  <!-- Board -->
+  <div class="board-container">
+    <div class="board" id="board"></div>
+  </div>
+
+  <!-- Bottom Actions -->
+  <div class="bottom-actions">
+    <button class="action-btn" onclick="showRewardedAdForHint()">💡 Hint (<span id="hintCount">3</span>)</button>
+    <button class="action-btn" onclick="undoMove()">↩ Undo</button>
+  </div>
+
+  <!-- Banner Ad Slot -->
+  <div class="ad-banner-area" id="adBanner">
+    <span>[ GOOGLE ADMOB / ADSENSE BANNER ]</span>
+    <span style="font-size: 0.65rem; color: #777;">Ad placeholder (320x50 standard mobile banner)</span>
+  </div>
+
+  <!-- Win Modal -->
+  <div class="modal" id="winModal">
+    <div class="modal-box">
+      <h2>🎉 Level Cleared!</h2>
+      <p id="winStats">Moves: 0 | Time: 00:00</p>
+      <button onclick="closeWinModalAndNext()">Play Again</button>
+    </div>
+  </div>
+
+  <script>
+    // Audio synthesizer for wooden tap sound
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playTapSound() {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.05);
+      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.05);
+    }
+
+    // State Variables
+    let size = 4;
+    let tiles = [];
+    let moves = 0;
+    let timer = 0;
+    let timerInterval = null;
+    let isPlaying = false;
+    let moveHistory = [];
+    let hintsRemaining = 3;
+
+    const boardEl = document.getElementById('board');
+    const timerEl = document.getElementById('timerText');
+    const movesEl = document.getElementById('movesText');
+    const hintCountEl = document.getElementById('hintCount');
+
+    function initGame() {
+      stopTimer();
+      moves = 0;
+      timer = 0;
+      moveHistory = [];
+      updateUI();
+
+      boardEl.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+      boardEl.style.gridTemplateRows = `repeat(${size}, 1fr)`;
+
+      generateSolvableBoard();
+      renderBoard();
+    }
+
+    function generateSolvableBoard() {
+      const totalTiles = size * size;
+      tiles = Array.from({ length: totalTiles - 1 }, (_, i) => i + 1);
+      tiles.push(0); // 0 represents the empty slot
+
+      // Fisher-Yates shuffle with solvability check
+      do {
+        for (let i = tiles.length - 2; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+        }
+      } while (!isSolvable(tiles, size) || isSolved());
+    }
+
+    // Mathematical inversion count for N-puzzle solvability
+    function isSolvable(puzzle, n) {
+      let inversions = 0;
+      for (let i = 0; i < puzzle.length; i++) {
+        for (let j = i + 1; j < puzzle.length; j++) {
+          if (puzzle[i] && puzzle[j] && puzzle[i] > puzzle[j]) {
+            inversions++;
+          }
+        }
+      }
+      if (n % 2 !== 0) {
+        return inversions % 2 === 0;
+      } else {
+        const emptyRowFromBottom = n - Math.floor(puzzle.indexOf(0) / n);
+        return (emptyRowFromBottom % 2 === 0) ? (inversions % 2 !== 0) : (inversions % 2 === 0);
+      }
+    }
+
+    function renderBoard() {
+      boardEl.innerHTML = '';
+      const fontSize = size >= 6 ? '1.1rem' : (size >= 5 ? '1.4rem' : '1.8rem');
+
+      tiles.forEach((value, index) => {
+        const tile = document.createElement('div');
+        tile.className = 'tile' + (value === 0 ? ' empty' : '');
+        tile.textContent = value === 0 ? '' : value;
+        tile.style.fontSize = fontSize;
+        if (value !== 0) {
+          tile.addEventListener('click', () => handleTileClick(index));
+        }
+        boardEl.appendChild(tile);
+      });
+    }
+
+    function handleTileClick(index) {
+      const emptyIndex = tiles.indexOf(0);
+      const row = Math.floor(index / size);
+      const col = index % size;
+      const emptyRow = Math.floor(emptyIndex / size);
+      const emptyCol = emptyIndex % size;
+
+      // Check if adjacent (Left, Right, Up, Down)
+      const isAdjacent = (Math.abs(row - emptyRow) + Math.abs(col - emptyCol)) === 1;
+
+      if (isAdjacent) {
+        if (!isPlaying) startTimer();
+        playTapSound();
+
+        // Save move for undo
+        moveHistory.push([...tiles]);
+
+        // Swap
+        [tiles[index], tiles[emptyIndex]] = [tiles[emptyIndex], tiles[index]];
+        moves++;
+        updateUI();
+        renderBoard();
+
+        if (isSolved()) {
+          stopTimer();
+          setTimeout(onPuzzleSolved, 250);
+        }
+      }
+    }
+
+    function isSolved() {
+      for (let i = 0; i < tiles.length - 1; i++) {
+        if (tiles[i] !== i + 1) return false;
+      }
+      return tiles[tiles.length - 1] === 0;
+    }
+
+    function startTimer() {
+      isPlaying = true;
+      clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        timer++;
+        updateUI();
+      }, 1000);
+    }
+
+    function stopTimer() {
+      isPlaying = false;
+      clearInterval(timerInterval);
+    }
+
+    function updateUI() {
+      const mins = String(Math.floor(timer / 60)).padStart(2, '0');
+      const secs = String(timer % 60).padStart(2, '0');
+      timerEl.textContent = `${mins}:${secs}`;
+      movesEl.textContent = moves;
+    }
+
+    function changeDifficulty(newSize) {
+      size = parseInt(newSize);
+      initGame();
+    }
+
+    function restartGame() {
+      // Trigger Interstitial Ad logic on frequent restarts
+      showInterstitialAdPlaceholder();
+      initGame();
+    }
+
+    function undoMove() {
+      if (moveHistory.length > 0) {
+        tiles = moveHistory.pop();
+        moves++;
+        updateUI();
+        renderBoard();
+        playTapSound();
+      }
+    }
+
+    /* ---------------- AD INTEGRATION HOOKS ---------------- */
+
+    // 1. Level Complete -> Interstitial Ad (Full Screen)
+    function onPuzzleSolved() {
+      document.getElementById('winStats').textContent = `Moves: ${moves} | Time: ${timerEl.textContent}`;
+      document.getElementById('winModal').style.display = 'flex';
+      
+      // Call Interstitial Ad
+      showInterstitialAdPlaceholder();
+    }
+
+    function closeWinModalAndNext() {
+      document.getElementById('winModal').style.display = 'none';
+      initGame();
+    }
+
+    // 2. Rewarded Video Ad -> For getting extra hints
+    function showRewardedAdForHint() {
+      const confirmWatch = confirm("Watch a short video ad to unlock +2 Hints?");
+      if (confirmWatch) {
+        // Here you load Google AdMob / Unity Ads Rewarded Ad
+        alert("Ad finished! +2 Hints credited.");
+        hintsRemaining += 2;
+        hintCountEl.textContent = hintsRemaining;
+      }
+    }
+
+    function showInterstitialAdPlaceholder() {
+      console.log("[AdMob / AdSense]: Trigger Interstitial Ad here.");
+    }
+
+    // Start on page load
+    initGame();
+  </script>
+</body>
+</html>
